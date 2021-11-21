@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
+
 class channel_selection(nn.Module):
     def __init__(self, num_channels):
         """
@@ -27,8 +28,7 @@ class channel_selection(nn.Module):
         """
         output = input_tensor.mul(self.indexes)
         return output
-    
-    
+
 class Mlp(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
         super().__init__()
@@ -38,8 +38,8 @@ class Mlp(nn.Module):
         self.act = act_layer()
         self.fc2 = nn.Linear(hidden_features, out_features)
         self.drop = nn.Dropout(drop)
-        self.select2 = channel_selection(dim)
-        
+        self.select2 = channel_selection(hidden_features)
+
     def forward(self, x):
         x = self.fc1(x)
         x = self.act(x)
@@ -48,7 +48,6 @@ class Mlp(nn.Module):
         x = self.fc2(x)
         x = self.drop(x)
         return x
-
 
 def window_partition(x, window_size):
     """
@@ -123,9 +122,10 @@ class WindowAttention(nn.Module):
         self.register_buffer("relative_position_index", relative_position_index)
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
-        self.to_q = nn.Linear(dim, dim, bias= False)
-        self.to_k = nn.Linear(dim, dim, bias= False)
-        self.to_v = nn.Linear(dim, dim, bias= False)
+        
+        self.to_q = nn.Linear(dim, dim, bias= True)
+        self.to_k = nn.Linear(dim, dim, bias= True)
+        self.to_v = nn.Linear(dim, dim, bias= True)
 
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj = nn.Linear(dim, dim)
@@ -134,9 +134,7 @@ class WindowAttention(nn.Module):
 
         trunc_normal_(self.relative_position_bias_table, std=.02)
         self.softmax = nn.Softmax(dim=-1)
-            
-        self.select1 = channel_selection(dim)
-        
+                    
     def forward(self, x, mask=None):
         """
         Args:
@@ -144,17 +142,9 @@ class WindowAttention(nn.Module):
             mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
         """
         B_, N, C = x.shape
-        # qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        #q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
-        q = self.to_q(x)
-        q = self.select1(q)
-        q = rearrange(q, 'b n (h d) -> b h n d', h = h)
-        k = self.to_k(x)
-        k = self.select1(k)
-        k = rearrange(k, 'b n (h d) -> b h n d', h = h)
-        v = self.to_v(x)
-        v = self.select1(v)
-        v = rearrange(v, 'b n (h d) -> b h n d', h = h)
+        qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
+
         q = q * self.scale
         attn = (q @ k.transpose(-2, -1))
 
