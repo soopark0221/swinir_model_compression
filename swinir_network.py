@@ -121,6 +121,10 @@ class WindowAttention(nn.Module):
         self.register_buffer("relative_position_index", relative_position_index)
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
+        self.to_q = nn.Linear(dim, dim, bias= False)
+        self.to_k = nn.Linear(dim, dim, bias= False)
+        self.to_v = nn.Linear(dim, dim, bias= False)
+
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj = nn.Linear(dim, dim)
 
@@ -140,14 +144,15 @@ class WindowAttention(nn.Module):
         B_, N, C = x.shape
         # qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         #q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
-        #q = self.select1(q)
-        #k = self.select1(k)
-        #v = self.select1(v)
-               
-        qkv = self.qkv(x)
-        qkv = self.select1(qkv).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
-      
+        q = self.to_q(x)
+        q = self.select1(q)
+        q = rearrange(q, 'b n (h d) -> b h n d', h = h)
+        k = self.to_k(x)
+        k = self.select1(k)
+        k = rearrange(k, 'b n (h d) -> b h n d', h = h)
+        v = self.to_v(x)
+        v = self.select1(v)
+        v = rearrange(v, 'b n (h d) -> b h n d', h = h)
         q = q * self.scale
         attn = (q @ k.transpose(-2, -1))
 
