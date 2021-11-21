@@ -10,7 +10,25 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
+class channel_selection(nn.Module):
+    def __init__(self, num_channels):
+        """
+        Initialize the `indexes` with all one vector with the length same as the number of channels.
+        During pruning, the places in `indexes` which correpond to the channels to be pruned will be set to 0.
+        """
+        super(channel_selection, self).__init__()
+        self.indexes = nn.Parameter(torch.ones(num_channels))
 
+    def forward(self, input_tensor):
+        """
+        Parameter
+        ---------
+        input_tensor: (B, num_patches + 1, dim). 
+        """
+        output = input_tensor.mul(self.indexes)
+        return output
+    
+    
 class Mlp(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
         super().__init__()
@@ -110,7 +128,9 @@ class WindowAttention(nn.Module):
 
         trunc_normal_(self.relative_position_bias_table, std=.02)
         self.softmax = nn.Softmax(dim=-1)
-
+            
+        self.select1 = channel_selection(dim)
+        
     def forward(self, x, mask=None):
         """
         Args:
@@ -118,9 +138,17 @@ class WindowAttention(nn.Module):
             mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
         """
         B_, N, C = x.shape
-        qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        # qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        #q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
+        #q = self.select1(q)
+        #k = self.select1(k)
+        #v = self.select1(v)
+        
+        
+        qkv = self.qkv(x)
+        qkv = self.select1(qkv).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
-
+      
         q = q * self.scale
         attn = (q @ k.transpose(-2, -1))
 
