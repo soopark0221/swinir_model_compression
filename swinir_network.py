@@ -143,8 +143,7 @@ class WindowAttention(nn.Module):
         #q = self.select1(q)
         #k = self.select1(k)
         #v = self.select1(v)
-        
-        
+               
         qkv = self.qkv(x)
         qkv = self.select1(qkv).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
@@ -505,9 +504,12 @@ class RSTB(nn.Module):
         self.patch_unembed = PatchUnEmbed(
             img_size=img_size, patch_size=patch_size, in_chans=0, embed_dim=dim,
             norm_layer=None)
+        
+        self.select2 = channel_selection(dim)
+        
 
     def forward(self, x, x_size):
-        return self.patch_embed(self.conv(self.patch_unembed(self.residual_group(x, x_size), x_size))) + x
+        return self.patch_embed(self.select2(self.conv(self.patch_unembed(self.residual_group(x, x_size), x_size)))) + x
 
     def flops(self):
         flops = 0
