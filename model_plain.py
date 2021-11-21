@@ -1,35 +1,3 @@
-Skip to content
-Search or jump to…
-Pull requests
-Issues
-Marketplace
-Explore
- 
-@soopark0221 
-cszn
-/
-KAIR
-Public
-31
-1.1k285
-Code
-Issues
-30
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-KAIR/models/model_plain.py /
-@JingyunLiang
-JingyunLiang compatible with SwinIR pretrained model (dict data structure)
-Latest commit 8860ee5 on 17 Sep
- History
- 2 contributors
-@cszn@JingyunLiang
-258 lines (228 sloc)  10.2 KB
-   
 from collections import OrderedDict
 import torch
 import torch.nn as nn
