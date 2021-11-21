@@ -38,11 +38,13 @@ class Mlp(nn.Module):
         self.act = act_layer()
         self.fc2 = nn.Linear(hidden_features, out_features)
         self.drop = nn.Dropout(drop)
-
+        self.select2 = channel_selection(dim)
+        
     def forward(self, x):
         x = self.fc1(x)
         x = self.act(x)
         x = self.drop(x)
+        x = self.select2(x)
         x = self.fc2(x)
         x = self.drop(x)
         return x
@@ -509,12 +511,10 @@ class RSTB(nn.Module):
         self.patch_unembed = PatchUnEmbed(
             img_size=img_size, patch_size=patch_size, in_chans=0, embed_dim=dim,
             norm_layer=None)
-        
-        self.select2 = channel_selection(dim)
-        
+                
 
     def forward(self, x, x_size):
-        return self.patch_embed(self.select2(self.conv(self.patch_unembed(self.residual_group(x, x_size), x_size)))) + x
+        return self.patch_embed(self.conv(self.patch_unembed(self.residual_group(x, x_size), x_size))) + x
 
     def flops(self):
         flops = 0
