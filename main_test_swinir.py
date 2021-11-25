@@ -44,6 +44,7 @@ def main():
     model = define_model(args)
     model.eval()
     model = model.to(device)
+    prune_model(model)
 
     # setup folder and path
     folder, save_dir, border, window_size = setup(args)
@@ -136,6 +137,47 @@ def define_model(args):
     model.load_state_dict(pretrained_model[param_key_g] if param_key_g in pretrained_model.keys() else pretrained_model, strict=True)
 
     return model
+
+def prune_model(model):
+    total = 0
+    for m in model.modules():
+        if isinstance(m, channel_selection):
+            total += m.indexes.data.shape[0]
+
+    bn = torch.zeros(total)
+    index = 0
+    for m in model.modules():
+        if isinstance(m, channel_selection):
+            size = m.indexes.data.shape[0]
+            bn[index:(index+size)] = m.indexes.data.abs().clone()
+            index += size
+
+    percent = 0.3
+    y, i = torch.sort(bn)
+    thre_index = int(total * percent)
+    thre = y[thre_index]
+
+    # print(thre)
+    pruned = 0
+    cfg = []
+    cfg_mask = []
+    for k, m in enumerate(model.modules()):
+        if isinstance(m, channel_selection):
+            # print(k)
+            # print(m)
+            weight_copy = m.indexes.data.abs().clone()
+            mask = weight_copy.gt(thre).float().cuda()
+            pruned = pruned + mask.shape[0] - torch.sum(mask)
+            m.indexes.data.mul_(mask)
+            cfg.append(int(torch.sum(mask)))
+            cfg_mask.append(mask.clone())
+            print('layer index: {:d} \t total channel: {:d} \t remaining channel: {:d}'.
+                format(k, mask.shape[0], int(torch.sum(mask))))
+
+    pruned_ratio = pruned/total
+    print('Pre-processing Successful!')
+    return cfg
+
 
 
 def setup(args):
