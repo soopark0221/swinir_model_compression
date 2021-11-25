@@ -11,7 +11,7 @@
       - What has changed : add channel_selection function and pruning layer on feed forward network
       - Copy/paste network_swinir_prune.py
    3. options/swinir/train_swinir_sr_classical.json
-      - What has changed : chnage "dist" from true to false (this part handles data parallel)
+      - What has changed : change "dist" from true to false (this part handles data parallel)
       - Copy/paste train_swinir_sr_classical.json 
 3. Train the model same as before.
 
