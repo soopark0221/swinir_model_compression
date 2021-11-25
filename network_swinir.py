@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
+from einops import rearrange
 
 class channel_selection(nn.Module):
     def __init__(self, num_channels):
@@ -48,6 +49,7 @@ class Mlp(nn.Module):
         x = self.fc2(x)
         x = self.drop(x)
         return x
+
 
 def window_partition(x, window_size):
     """
@@ -123,9 +125,9 @@ class WindowAttention(nn.Module):
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         
-        self.to_q = nn.Linear(dim, dim, bias= True)
-        self.to_k = nn.Linear(dim, dim, bias= True)
-        self.to_v = nn.Linear(dim, dim, bias= True)
+        self.to_q = nn.Linear(dim, dim, bias= False)
+        self.to_k = nn.Linear(dim, dim, bias= False)
+        self.to_v = nn.Linear(dim, dim, bias= False)
 
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj = nn.Linear(dim, dim)
@@ -134,7 +136,7 @@ class WindowAttention(nn.Module):
 
         trunc_normal_(self.relative_position_bias_table, std=.02)
         self.softmax = nn.Softmax(dim=-1)
-                    
+
     def forward(self, x, mask=None):
         """
         Args:
@@ -501,7 +503,6 @@ class RSTB(nn.Module):
         self.patch_unembed = PatchUnEmbed(
             img_size=img_size, patch_size=patch_size, in_chans=0, embed_dim=dim,
             norm_layer=None)
-                
 
     def forward(self, x, x_size):
         return self.patch_embed(self.conv(self.patch_unembed(self.residual_group(x, x_size), x_size))) + x
