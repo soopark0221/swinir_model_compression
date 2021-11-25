@@ -24,6 +24,7 @@
    3. main_test_swinir.py
       - Copy/paste main_test_swinir_prune.py
   d. Run the test.
+  
 
 **A little comment**
-  - I do not recommend changing the original code. I said 'copy/paste' for brevity but I strongly recommend making copies of original file before modifying the code. They can be easily mixed up.
+I do not recommend changing the original code. I said 'copy/paste' for brevity but I strongly recommend making copies of original file before modifying the code. They can be easily mixed up.
