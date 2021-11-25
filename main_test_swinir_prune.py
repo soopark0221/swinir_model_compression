@@ -7,9 +7,9 @@ import os
 import torch
 import requests
 
-from models.network_swinir import SwinIR as net
+from models.network_swinir_prune import SwinIR as net
+from models.network_swinir_prune import channel_selection
 from utils import util_calculate_psnr_ssim as util
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -73,13 +73,7 @@ def main():
             img_lq = torch.cat([img_lq, torch.flip(img_lq, [3])], 3)[:, :, :, :w_old + w_pad]
             output = test(img_lq, model, args, window_size)
             output = output[..., :h_old * args.scale, :w_old * args.scale]
-          
-        # prune 
-        cfg_prune = []
-        for i in range(len(cfg)):
-            if i%2!=0:
-                cfg_prune.append([cfg[i-1], cfg[i]])
-        
+                  
         # save image
         output = output.data.squeeze().float().cpu().clamp_(0, 1).numpy()
         if output.ndim == 3:
