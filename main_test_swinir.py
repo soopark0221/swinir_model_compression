@@ -73,6 +73,11 @@ def main():
             output = test(img_lq, model, args, window_size)
             output = output[..., :h_old * args.scale, :w_old * args.scale]
           
+        # prune 
+        cfg_prune = []
+        for i in range(len(cfg)):
+            if i%2!=0:
+                cfg_prune.append([cfg[i-1], cfg[i]])
         
         # save image
         output = output.data.squeeze().float().cpu().clamp_(0, 1).numpy()
