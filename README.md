@@ -4,25 +4,25 @@
 # Training
 1. Go to KAIR code
 2. Modifications
-  a. models/model_plain.py
-     - What has changed : add sparse_selection function during training
-     - Copy/paste model_plain.py
-  b. models/network_swinir.py
-     - What has changed : add channel_selection function and pruning layer on feed forward network
-     - Copy/paste network_swinir_prune.py
-  c. options/swinir/train_swinir_sr_classical.json
-     - What has changed : chnage "dist" from true to false (this part handles data parallel)
-     - Copy/paste train_swinir_sr_classical.json 
+   1. models/model_plain.py
+      - What has changed : add sparse_selection function during training
+      - Copy/paste model_plain.py
+   2. models/network_swinir.py
+      - What has changed : add channel_selection function and pruning layer on feed forward network
+      - Copy/paste network_swinir_prune.py
+   3. options/swinir/train_swinir_sr_classical.json
+      - What has changed : chnage "dist" from true to false (this part handles data parallel)
+      - Copy/paste train_swinir_sr_classical.json 
 3. Train the model same as before.
 
 # Test
 1. Go to SwinIR code
 2. Modifications
-  a. Copy trained model(.pth) to model_zoo/
-  b. models/network_swinir.py
-     - Copy/paste network_swinir_prune.py
-  c. main_test_swinir.py
-     - Copy/paste main_test_swinir_prune.py
+   1. Copy trained model(.pth) to model_zoo/
+   2. models/network_swinir.py
+      - Copy/paste network_swinir_prune.py
+   3. main_test_swinir.py
+      - Copy/paste main_test_swinir_prune.py
   d. Run the test.
 
 A little comment 
