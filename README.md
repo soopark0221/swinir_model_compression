@@ -4,6 +4,7 @@
 # Training
 1. Go to KAIR code
 2. Modification :
+  
   a. models/model_plain.py
     - What is changed : add sparse_selection function during training
     - Copy/paste model_plain.py
@@ -18,6 +19,7 @@
 # Test
 1. Go to SwinIR code
 2. Modification :
+
   a. Copy trained model(.pth) to model_zoo/
   b. models/network_swinir.py
     - Copy/paste network_swinir_prune.py
