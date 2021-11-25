@@ -12,6 +12,7 @@ from models.loss_ssim import SSIMLoss
 from utils.utils_model import test_mode
 from utils.utils_regularizers import regularizer_orth, regularizer_clip
 
+from models.network_swinir import channel_selection
 
 class ModelPlain(ModelBase):
     """Train with pixel loss"""
@@ -37,7 +38,7 @@ class ModelPlain(ModelBase):
     # initialize training
     # ----------------------------------------
     def init_train(self):
-        self.load()                           # load model
+        #self.load()                           # load model
         self.netG.train()                     # set training mode,for BN
         self.define_loss()                    # define loss
         self.define_optimizer()               # define optimizer
@@ -141,16 +142,7 @@ class ModelPlain(ModelBase):
     # ----------------------------------------
     def netG_forward(self):
         self.E = self.netG(self.L)
-    
-    # ----------------------------------------
-    # prune
-    # ----------------------------------------
-    def sparse_selection():
-        s = 1e-4
-        net = self.load()
-        for m in net.modules():
-            if isinstance(m, channel_selection):
-                m.indexes.grad.data.add_(s*torch.sign(m.indexes.data))  # L1
+
     # ----------------------------------------
     # update parameters and get loss
     # ----------------------------------------
@@ -158,8 +150,13 @@ class ModelPlain(ModelBase):
         self.G_optimizer.zero_grad()
         self.netG_forward()
         G_loss = self.G_lossfn_weight * self.G_lossfn(self.E, self.H)
-        self.sparse_selection()
         G_loss.backward()
+        
+        self.s = 1e-4 # define in init
+        net = self.netG
+        for m in enumerate(net.modules()):
+            if isinstance(m, channel_selection):
+                m.indexes.grad.data.add_(s*torch.sign(m.indexes.data))
 
         # ------------------------------------
         # clip_grad
