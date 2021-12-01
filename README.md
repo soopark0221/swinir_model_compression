@@ -26,7 +26,8 @@
    3. main_test_swinir.py
       - Copy/paste main_test_swinir_prune.py
   d. Run the test.
-  
+      - python main_test_swinir_prune.py --task classical_sr --scale 2 --training_patch_size 48 --model_path model_zoo/72000_E.pth --folder_lq testsets/urban100/LR --folder_gt testsets/urban100/HR
+
 
 ## A little comment
 - I do not recommend changing the original code. I said 'copy/paste' for brevity but I strongly recommend making copies of original file before modifying the code. They can get easily mixed up.
