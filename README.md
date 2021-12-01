@@ -14,6 +14,8 @@
       - What has changed : change "dist" from true to false (this part handles data parallel)
       - Copy/paste train_swinir_sr_classical.json 
 3. Train the model same as before.
+      - python main_train_psnr.py --opt options/swinir/train_swinir_sr_classical.json
+      - python -m torch.distributed.launch --nproc_per_node=8 --master_port=1234 main_train_psnr.py --opt options/swinir/train_swinir_sr_classical.json  --dist True
 
 # Test
 1. Go to SwinIR code
